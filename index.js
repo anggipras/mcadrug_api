@@ -8,7 +8,8 @@ const PORT = process.env.PORT || 7777
 const {
     AuthRoutes,
     DrugRoutes,
-    SearchDrugRoutes
+    SearchDrugRoutes,
+    TransactionRoutes
 } = require('./src/routes')
 
 app.use(cors())
@@ -20,6 +21,7 @@ app.use(express.static('public'))
 app.use('/auth', AuthRoutes)
 app.use('/drug', DrugRoutes)
 app.use('/search', SearchDrugRoutes)
+app.use('/transac', TransactionRoutes)
 
 app.get('/', (req, res)=> {
     res.send('IT IS WORKING')

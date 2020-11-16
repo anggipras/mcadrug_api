@@ -1,20 +1,20 @@
 const {db} = require('./../connections')
-const {encrypt} = require('./../helpers')
-const nodemailer = require('nodemailer')
+const {encrypt, transporter} = require('./../helpers')
 const fs = require('fs')
 const handlebars = require('handlebars')
 const {createJWToken} = require('./../helpers/jwt')
 
-let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'anggiprastianto30@gmail.com',
-        pass: 'scftufihozxzbjcg'
-    },
-    tls : {
-        rejectUnauthorized: false
-    }
-})
+const DbPROMselect = (sql) => {
+    return new Promise((resolve, reject)=> {
+        db.query(sql,(err, results)=> {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(results)
+            }
+        })
+    })
+}
 
 module.exports = {
     register: (req, res)=> {
@@ -114,14 +114,21 @@ module.exports = {
             })
         })
     },
-    keeplogin: (req, res)=> {
+    keeplogin: async (req, res)=> {
         const {id} = req.params
         let sql = `select * from users where id = ${db.escape(id)}`
-        db.query(sql, (err, datalogin)=> {
-            if (err) return res.status(500).send({message: err.message})
+        try {
+            const datalogin = await DbPROMselect(sql)
+            sql = `select m.photo, m.drugname, m.price, td.qty, m.id as idmed, t.id as idtrans from medicines m
+            join transactionsdetail td on m.id = td.medicines_id
+            join transactions t on t.id = td.transactions_id
+            where status = 'onCart' and t.users_id = ${db.escape(datalogin[0].id)} and td.isdeleted = 0`
+            const cartData = await DbPROMselect(sql)
             const tokenuser = createJWToken({id: datalogin[0].id, username: datalogin[0].username})
             datalogin[0].token = tokenuser
-            return res.send(datalogin[0])
-        })
+            return res.send({datalogin: datalogin[0], cartData: cartData})
+        } catch (error) {
+            return res.status(500).send({message: error.message})
+        }
     }
 }

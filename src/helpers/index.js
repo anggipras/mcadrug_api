@@ -1,3 +1,4 @@
 module.exports = {
-    encrypt: require('./encrypt')
+    encrypt: require('./encrypt'),
+    transporter: require('./mailers')
 }
