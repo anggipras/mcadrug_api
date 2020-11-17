@@ -119,7 +119,7 @@ module.exports = {
         let sql = `select * from users where id = ${db.escape(id)}`
         try {
             const datalogin = await DbPROMselect(sql)
-            sql = `select m.photo, m.drugname, m.price, td.qty, m.id as idmed, t.id as idtrans from medicines m
+            sql = `select m.photo, m.drugname, m.price, m.package, td.qty, m.id as idmed, t.id as idtrans from medicines m
             join transactionsdetail td on m.id = td.medicines_id
             join transactions t on t.id = td.transactions_id
             where status = 'onCart' and t.users_id = ${db.escape(datalogin[0].id)} and td.isdeleted = 0`
