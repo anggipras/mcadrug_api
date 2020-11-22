@@ -56,5 +56,19 @@ module.exports = {
         } catch (error) {
             return res.status(500).send({message: error.message})
         }
+    },
+    mostboughtmed: async (req, res)=> {
+        let sql = `select medicines_id, drugname, photo, class from transactionsdetail
+        join medicines on medicines.id = transactionsdetail.medicines_id
+        group by medicines_id
+        order by count(*) desc
+        limit 4`
+
+        try {
+            const themost = await dbPromSelect(sql)
+            return res.send(themost)
+        } catch (error) {
+            return res.status(500).send(error)
+        }
     }
 }

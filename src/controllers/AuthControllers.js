@@ -108,9 +108,17 @@ module.exports = {
             }
             db.query(sql, updateData, (err)=> {
                 if (err) return res.status(500).send({message: err.message})
-                const tokenuser = createJWToken({id: datausers[0].id, username: datausers[0].username})
-                datausers[0].token = tokenuser
-                return res.send(datausers[0])
+
+                sql = `select m.photo, m.drugname, m.price, m.package, td.qty, m.id as idmed, t.id as idtrans from medicines m
+                join transactionsdetail td on m.id = td.medicines_id
+                join transactions t on t.id = td.transactions_id
+                where status = 'onCart' and t.users_id = ? and td.isdeleted = 0`
+                db.query(sql, [datausers[0].id], (err, cartData)=> {
+                    if (err) return res.status(500).send({message: err.message})
+                    const tokenuser = createJWToken({id: datausers[0].id, username: datausers[0].username})
+                    datausers[0].token = tokenuser
+                    return res.send({datalogin: datausers[0], cartData: cartData})
+                }) 
             })
         })
     },

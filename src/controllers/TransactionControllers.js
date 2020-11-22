@@ -1,5 +1,17 @@
 const {db} = require('./../connections')
 
+const queryProm = (sql) => {
+    return new Promise((resolve, reject)=> {
+        db.query(sql, (err, results)=> {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(results)
+            }
+        })
+    })
+}
+
 module.exports = {
     addtocart: (req, res) => {
         const {userid, medid} = req.body
@@ -152,5 +164,44 @@ module.exports = {
                 })
             }
         })
+    },
+    getcart: (req, res)=> {
+        const {userid} = req.query
+        let sql = `select m.photo, m.drugname, m.price, m.package, td.qty, m.id as idmed, t.id as idtrans from medicines m
+        join transactionsdetail td on m.id = td.medicines_id
+        join transactions t on t.id = td.transactions_id
+        where status = 'onCart' and t.users_id = ? and td.isdeleted = 0`
+        db.query(sql, [userid], (err, cartData)=> {
+            if (err) return res.status(500).send(err)
+            
+            return res.send(cartData)
+        })
+    },
+    onpaycc: (req, res)=> {
+        const {idtrans, ccnumber, cartdata} = req.body
+        let sql = `update transactions set ? where id = ${db.escape(idtrans)}`
+        let updateData = {
+            date: new Date(),
+            status: 'completed',
+            paymethod: 'cc',
+            payinvoice: ccnumber
+        }
+
+        db.query(sql, updateData, (err)=> {
+            if (err) return res.status(500).send(err)
+
+            let arr = []
+            cartdata.forEach(val => {
+                arr.push(queryProm(`update transactionsdetail set buyprice = ${val.price} where transactions_id = ${val.idtrans} and medicines_id = ${val.idmed}`))
+            });
+
+            Promise.all(arr).then(()=> {
+                return res.send('berhasil') //tidak perlu getcart lagi karena jika berhasil, di front otomatis kosong
+            }).catch((err)=> {
+                console.log(err);
+                return res.status(500).send(err)
+            })
+        })
+
     }
 }
