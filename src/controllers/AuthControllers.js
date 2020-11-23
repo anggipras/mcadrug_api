@@ -58,7 +58,7 @@ module.exports = {
                         const htmlrender = fs.readFileSync('./templates/email.html','utf8')
                         const template = handlebars.compile(htmlrender)
                         const tokenuser = createJWToken({id: userLogin[0].id, username: userLogin[0].username})
-                        const link = `http://localhost:3000/verified?token=${tokenuser}`
+                        const link = `https://mcadrugstore.web.app/verified?token=${tokenuser}`
                         const htmlemail = template({name: userLogin[0].username, link: link})
                         transporter.sendMail({
                             from: 'MCADRUG <anggiprastianto30@gmail.com>',
